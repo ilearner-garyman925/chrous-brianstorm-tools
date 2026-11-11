@@ -93,17 +93,8 @@ export function Desk({ code }: { code: string }) {
     if (!present) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
-      if (event.key === "Escape") setPresent(false);
-      if (event.key === "c" || event.key === "C") setView("cloud");
-      if (event.key === "t" || event.key === "T") setView("themes");
-      if (event.key === "s" || event.key === "S") setView("tensions");
-    };
-    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
     };
   }, [present]);
 
@@ -616,6 +607,33 @@ function Presenter({
   analysis: HostSnapshot["analyses"][number] | null;
   responses: HostResponse[];
 }) {
+  const [picked, setPicked] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      if (event.key === "Escape") {
+        if (picked) setPicked(null);
+        else onClose();
+        return;
+      }
+      if (event.key === "c" || event.key === "C") {
+        setPicked(null);
+        setView("cloud");
+      }
+      if (event.key === "t" || event.key === "T") {
+        setPicked(null);
+        setView("themes");
+      }
+      if (event.key === "s" || event.key === "S") {
+        setPicked(null);
+        setView("tensions");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, picked, setView]);
+
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-[#16130f] px-6 py-5 text-[#f3ecdf] sm:px-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -635,7 +653,10 @@ function Presenter({
               key={id}
               variant={view === id ? "secondary" : "outline"}
               className={view === id ? "" : "border-[#5c5348] bg-transparent text-[#f3ecdf] hover:bg-white/10"}
-              onClick={() => setView(id)}
+              onClick={() => {
+                setPicked(null);
+                setView(id);
+              }}
             >
               {label}
             </Button>
@@ -645,10 +666,22 @@ function Presenter({
           </Button>
         </div>
       </div>
-      <p className="mt-2 hidden text-xs text-[#8a7d6d] sm:block">C cloud · T themes · S tensions · Esc exit</p>
-      <div className="mt-4 min-h-0 flex-1 overflow-auto">
+      <p className="mt-2 hidden text-xs text-[#8a7d6d] sm:block">
+        Click a bubble · C cloud · T themes · S tensions · Esc {picked ? "closes the lines" : "exits"}
+      </p>
+      <div className={`mt-4 min-h-0 flex-1 ${view === "cloud" ? "overflow-hidden" : "overflow-auto"}`}>
         {view === "cloud" ? (
-          <WordCloud concepts={concepts} themeIds={themeIds} tone="ink" legend={legend} />
+          <WordCloud
+            concepts={concepts}
+            themeIds={themeIds}
+            tone="ink"
+            legend={legend}
+            playful
+            quotes={responses}
+            themes={analysis?.themes ?? []}
+            pickedKey={picked}
+            onPick={setPicked}
+          />
         ) : null}
         {view === "themes" ? (
           <ThemeBoard

@@ -118,6 +118,27 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes chorus-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--tilt, 0deg));
+  }
+  50% {
+    transform: translate3d(var(--dx, 0px), var(--dy, -6px), 0) rotate(calc(var(--tilt, 0deg) * -1));
+  }
+}
+
+.chorus-bubble {
+  animation: chorus-drift var(--dur, 7s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chorus-bubble {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

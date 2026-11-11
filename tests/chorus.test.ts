@@ -23,6 +23,7 @@ import {
   studentView,
   submitResponse,
 } from "@/lib/store";
+import { detailForConcept } from "@/lib/concept-detail";
 import { layoutCloud } from "@/lib/wordcloud";
 
 beforeEach(() => {
@@ -169,6 +170,32 @@ describe("word cloud layout", () => {
         expect(separated, `${a.text} overlaps ${b.text}`).toBe(true);
       }
     }
+  });
+});
+
+describe("concept details", () => {
+  const responses = [
+    { id: "a", text: "I want feedback on the draft, then I rewrite it myself." },
+    { id: "b", text: "Draft feedback only. Do not finish the essay for me." },
+    { id: "c", text: "The projector in this room is still fuzzy." },
+  ];
+
+  it("opens the lines that use the word, inside its theme", () => {
+    const detail = detailForConcept({ text: "Draft", themeId: "th_1" }, responses, [
+      { id: "th_1", label: "Draft & Feedback", summary: "People want notes on a draft.", responseIds: ["a", "b"] },
+      { id: "th_2", label: "Projector", summary: "The room itself.", responseIds: ["c"] },
+    ]);
+    expect(detail.direct).toBe(true);
+    expect(detail.themeLabel).toBe("Draft & Feedback");
+    expect(detail.quotes.map((quote) => quote.id)).toEqual(["a", "b"]);
+  });
+
+  it("keeps a lone theme visible when the wording does not repeat", () => {
+    const detail = detailForConcept({ text: "Board", themeId: "th_2" }, responses, [
+      { id: "th_2", label: "Projector", summary: "The room itself.", responseIds: ["c"] },
+    ]);
+    expect(detail.direct).toBe(false);
+    expect(detail.quotes.map((quote) => quote.id)).toEqual(["c"]);
   });
 });
 

@@ -305,7 +305,22 @@ export function Desk({ code }: { code: string }) {
           </Tabs>
           <div className={view === "cloud" ? "h-[28rem]" : ""}>
             {view === "cloud" ? (
-              <WordCloud concepts={round.concepts} themeIds={themeIds} tone="paper" legend={legend} />
+              <WordCloud
+                concepts={round.concepts}
+                themeIds={themeIds}
+                tone="paper"
+                legend={legend}
+                playful
+                showNames
+                quotes={responses
+                  .filter((response) => !response.hidden)
+                  .map((response) => ({
+                    id: response.id,
+                    text: response.text,
+                    label: response.participant.label,
+                  }))}
+                themes={analysis?.themes ?? []}
+              />
             ) : null}
             {view === "themes" ? (
               <ThemeBoard

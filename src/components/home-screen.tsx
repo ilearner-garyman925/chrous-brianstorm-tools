@@ -95,7 +95,7 @@ export function HomeScreen() {
           </p>
         </div>
         <div className="h-80 rounded-3xl border border-[#d9cdb8] bg-[#faf6ef] p-4">
-          <WordCloud concepts={PREVIEW} themeIds={THEME_IDS} tone="paper" />
+          <WordCloud concepts={PREVIEW} themeIds={THEME_IDS} tone="paper" playful />
           <p className="text-center text-xs text-[#5c5348]">Sample room · how this class should use AI</p>
         </div>
       </section>

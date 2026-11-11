@@ -6,7 +6,7 @@ import { detailForConcept, type ThemeRef } from "@/lib/concept-detail";
 import type { Concept } from "@/lib/types";
 import { layoutCloud, type PlacedWord } from "@/lib/wordcloud";
 
-export type CloudQuote = { id: string; text: string };
+export type CloudQuote = { id: string; text: string; label?: string };
 
 function hash(text: string) {
   let value = 0;
@@ -31,6 +31,7 @@ export function WordCloud({
   playful = false,
   quotes = [],
   themes = [],
+  showNames = false,
   pickedKey = null,
   onPick,
 }: {
@@ -41,12 +42,19 @@ export function WordCloud({
   playful?: boolean;
   quotes?: CloudQuote[];
   themes?: ThemeRef[];
+  showNames?: boolean;
   pickedKey?: string | null;
   onPick?: (key: string | null) => void;
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [placed, setPlaced] = useState<PlacedWord[]>([]);
+  const [localPick, setLocalPick] = useState<string | null>(null);
+  const activeKey = onPick ? pickedKey : localPick;
+  const choose = (key: string | null) => {
+    if (onPick) onPick(key);
+    else setLocalPick(key);
+  };
   const signature = useMemo(
     () => concepts.map((concept) => `${concept.text}:${concept.weight}:${concept.themeId}`).join("|"),
     [concepts],
@@ -93,14 +101,24 @@ export function WordCloud({
     };
   }, [concepts, playful, signature, size.h, size.w]);
 
-  const picked = playful ? placed.find((word) => wordKey(word) === pickedKey) : undefined;
+  const picked = playful ? placed.find((word) => wordKey(word) === activeKey) : undefined;
   const detail = picked ? detailForConcept(picked, quotes, themes) : null;
   const shown = detail?.quotes.slice(0, 6) ?? [];
   const extra = detail ? detail.quotes.length - shown.length : 0;
 
   return (
     <div className="relative flex h-full min-h-64 flex-col">
-      <div ref={frame} className="relative min-h-56 flex-1 overflow-hidden">
+      {playful ? (
+        <style>{`
+          @keyframes chorus-drift {
+            0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--tilt, 0deg)) scale(1); }
+            50% { transform: translate3d(var(--dx, 14px), var(--dy, -18px), 0) rotate(calc(var(--tilt, 0deg) * -1)) scale(1.07); }
+          }
+          .chorus-bubble { animation: chorus-drift var(--dur, 4s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+          @media (prefers-reduced-motion: reduce) { .chorus-bubble { animation: none; } }
+        `}</style>
+      ) : null}
+      <div ref={frame} className={`relative min-h-56 flex-1 ${playful ? "overflow-visible" : "overflow-hidden"}`}>
         {playful ? null : (
           <ul className="sr-only">
             {concepts.map((concept) => (
@@ -115,13 +133,13 @@ export function WordCloud({
             const key = wordKey(word);
             const color = colorForTheme(word.themeId, themeIds, tone);
             const n = hash(word.text);
-            const selected = key === pickedKey;
+            const selected = key === activeKey;
             const motion = {
-              "--dx": `${(n % 13) - 6}px`,
-              "--dy": `${-4 - (n % 8)}px`,
-              "--tilt": `${(n % 5) - 2}deg`,
-              "--dur": `${6 + (n % 35) / 10}s`,
-              "--delay": `${-((n % 50) / 10)}s`,
+              "--dx": `${(n % 25) - 12}px`,
+              "--dy": `${-16 - (n % 18)}px`,
+              "--tilt": `${(n % 11) - 5}deg`,
+              "--dur": `${3.2 + (n % 20) / 10}s`,
+              "--delay": `${-((n % 32) / 10)}s`,
             } as CSSProperties;
             if (!playful) {
               return (
@@ -154,14 +172,14 @@ export function WordCloud({
                   height: word.h,
                   fontSize: word.fontSize,
                   color,
-                  background: `color-mix(in srgb, ${color} ${selected ? 34 : 18}%, transparent)`,
-                  border: `1.5px solid color-mix(in srgb, ${color} ${selected ? 80 : 48}%, transparent)`,
+                  background: `color-mix(in srgb, ${color} ${selected ? 42 : 28}%, ${ink ? "#211c17" : "#faf6ef"})`,
+                  border: `2px solid color-mix(in srgb, ${color} ${selected ? 90 : 70}%, transparent)`,
                   borderRadius: blobRadius(word.text),
                   boxShadow: selected ? `0 0 0 3px color-mix(in srgb, ${color} 35%, transparent)` : undefined,
                   animationPlayState: selected ? "paused" : "running",
                 }}
                 aria-pressed={selected}
-                onClick={() => onPick?.(selected ? null : key)}
+                onClick={() => choose(selected ? null : key)}
               >
                 {word.text}
               </button>
@@ -199,7 +217,7 @@ export function WordCloud({
             <button
               type="button"
               className={`shrink-0 rounded-full px-3 py-1 text-sm ${ink ? "bg-white/10" : "bg-[#e7dccb]"}`}
-              onClick={() => onPick?.(null)}
+              onClick={() => choose(null)}
             >
               Close
             </button>
@@ -208,6 +226,11 @@ export function WordCloud({
             <ul className="mt-4 space-y-3">
               {shown.map((quote) => (
                 <li key={quote.id} className="font-serif text-lg leading-snug">
+                  {showNames && quote.label ? (
+                    <span className={`mb-1 block font-sans text-xs ${ink ? "text-[#d7cbb8]" : "text-[#5c5348]"}`}>
+                      {quote.label}
+                    </span>
+                  ) : null}
                   “{quote.text}”
                 </li>
               ))}

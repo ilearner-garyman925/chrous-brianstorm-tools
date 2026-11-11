@@ -4,6 +4,8 @@ Chorus is a live discussion board for a teacher and a room of students. The teac
 
 It is meant for a seminar, a workshop, or a brainstorm: one sitting, one machine or one small server, up to a few dozen people.
 
+Taking this over to finetune the screens and publish a room? Start with [HANDOVER.md](HANDOVER.md).
+
 ## Run it
 
 ```bash

@@ -1,23 +1,12 @@
 import Link from "next/link";
 
 export function Brand({ light = false }: { light?: boolean }) {
-  return (
-    <Link href="/" className="inline-flex items-center gap-2.5">
-      <span
-        className={`grid size-9 place-items-center rounded-lg font-serif text-lg ${
-          light ? "bg-[#f3ecdf] text-[#1e1a16]" : "bg-[#1e1a16] text-[#f3ecdf]"
-        }`}
-      >
-        C
-      </span>
-      <span className="leading-tight">
-        <span className={`block font-serif text-xl ${light ? "text-[#f3ecdf]" : "text-[#1e1a16]"}`}>
-          Chorus
-        </span>
-        <span className={`block text-xs ${light ? "text-[#d7cbb8]" : "text-[#5c5348]"}`}>
-          Discussion, grouped
-        </span>
-      </span>
-    </Link>
-  );
+  return <Link href="/" className={`chorus-brand inline-flex items-center gap-2.5${light ? " chorus-brand-light" : ""}`} aria-label="Chorus">
+    <svg className="chorus-mark" width="42" height="40" viewBox="0 0 48 46" aria-hidden="true">
+      <path fill="#163B50" d="M10 2h18a8 8 0 0 1 8 8v13a8 8 0 0 1-8 8H12l-8 6v-9a8 8 0 0 1-2-5V10a8 8 0 0 1 8-8Z"/>
+      <path fill="#4C9F91" d="M22 14h16a8 8 0 0 1 8 8v13a8 8 0 0 1-3 6v4l-7-2H22a8 8 0 0 1-8-8V22a8 8 0 0 1 8-8Z"/>
+      <path fill="#E9BC59" d="M22 14h14v9a8 8 0 0 1-8 8H14v-9a8 8 0 0 1 8-8Z"/>
+    </svg>
+    <strong className="chorus-wordmark">Chorus</strong>
+  </Link>;
 }

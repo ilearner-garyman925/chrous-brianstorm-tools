@@ -2,6 +2,8 @@ export type RoundStatus = "open" | "locked";
 export type AnalysisSource = "llm" | "local";
 
 export type Concept = {
+  responseIds?: string[];
+  supporterCount?: number;
   text: string;
   weight: number;
   themeId: string | null;

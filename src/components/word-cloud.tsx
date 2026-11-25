@@ -5,8 +5,9 @@ import { colorForTheme } from "@/lib/colors";
 import { detailForConcept, type ThemeRef } from "@/lib/concept-detail";
 import type { Concept } from "@/lib/types";
 import { layoutCloud, type PlacedWord } from "@/lib/wordcloud";
+import { OrbitCloud } from "@/components/orbit-cloud";
 
-export type CloudQuote = { id: string; text: string; label?: string };
+export type CloudQuote = { id: string; text: string; label?: string; participantId?: string };
 
 function hash(text: string) {
   let value = 0;
@@ -14,16 +15,11 @@ function hash(text: string) {
   return value;
 }
 
-function blobRadius(text: string) {
-  const n = hash(text);
-  const a = 46 + (n % 22);
-  const b = 38 + ((n >> 3) % 26);
-  const c = 48 + ((n >> 6) % 20);
-  const d = 36 + ((n >> 9) % 24);
-  return `${a}% ${100 - b}% ${c}% ${100 - d}% / ${b}% ${d}% ${100 - c}% ${a}%`;
+export function WordCloud(props: Parameters<typeof ClassicWordCloud>[0] & { orbit?: boolean; focusRequest?: {key:string;sequence:number}|null; onFocusHandled?:()=>void; onHide?: (id: string) => void; busy?: boolean; animationHistory?: Set<string>; animationScope?: string }) {
+  return props.orbit ? <OrbitCloud {...props} /> : <ClassicWordCloud {...props} />;
 }
 
-export function WordCloud({
+function ClassicWordCloud({
   concepts,
   themeIds,
   tone,
@@ -48,6 +44,7 @@ export function WordCloud({
 }) {
   const frame = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const [layoutHeight, setLayoutHeight] = useState(0);
   const [placed, setPlaced] = useState<PlacedWord[]>([]);
   const [localPick, setLocalPick] = useState<string | null>(null);
   const activeKey = onPick ? pickedKey : localPick;
@@ -55,10 +52,8 @@ export function WordCloud({
     if (onPick) onPick(key);
     else setLocalPick(key);
   };
-  const signature = useMemo(
-    () => concepts.map((concept) => `${concept.text}:${concept.weight}:${concept.themeId}`).join("|"),
-    [concepts],
-  );
+  const signature = JSON.stringify(concepts);
+  const layoutConcepts = useMemo(() => JSON.parse(signature) as Concept[], [signature]);
   const ink = tone === "ink";
 
   useEffect(() => {
@@ -81,17 +76,37 @@ export function WordCloud({
       const context = canvas.getContext("2d");
       if (!context) return;
       const family =
-        getComputedStyle(document.documentElement).getPropertyValue("--font-fraunces").trim() ||
-        "Georgia";
-      const boxes = layoutCloud(concepts, size.w, size.h, (text, fontSize) => {
+        getComputedStyle(document.documentElement).getPropertyValue("--font-outfit").trim() ||
+        "sans-serif";
+      const maxWidth = size.w < 480 ? size.w - 32 : Math.min(320, size.w * .4);
+      const measure = (text: string, fontSize: number) => {
         context.font = `600 ${fontSize}px ${family}`;
-        const padX = playful ? Math.round(fontSize * 0.72) : 1;
-        const padY = playful ? Math.round(fontSize * 0.48) : 0;
-        return {
-          w: Math.ceil(context.measureText(text).width) + padX * 2,
-          h: Math.ceil(fontSize * 1.2) + padY * 2,
-        };
-      });
+        const padX = playful ? Math.max(12, Math.round(fontSize * .45)) : 2;
+        const padY = playful ? Math.max(8, Math.round(fontSize * .3)) : 2;
+        const available = Math.max(12, maxWidth - padX * 2);
+        // Measure wrapping by grapheme-sized code points; CSS can break long tokens too.
+        let line = "";
+        let lines = 1;
+        let widest = 0;
+        for (const char of Array.from(text)) {
+          if (line && context.measureText(line + char).width > available) {
+            widest = Math.max(widest, context.measureText(line).width);
+            line = char;
+            lines++;
+          } else line += char;
+        }
+        widest = Math.max(widest, context.measureText(line).width);
+        return {w: Math.min(maxWidth, Math.ceil(widest) + padX * 2),
+          h: Math.ceil(fontSize * 1.25 * lines) + padY * 2};
+      };
+      let height = size.w < 480 ? Math.max(size.h, layoutConcepts.length * 56) : size.h;
+      let boxes = layoutCloud(layoutConcepts, size.w, height, measure);
+      // Grow the scrollable canvas instead of dropping concepts or shrinking unreadably.
+      for (let attempt = 0; boxes.length < layoutConcepts.length && attempt < 12; attempt++) {
+        height += 160;
+        boxes = layoutCloud(layoutConcepts, size.w, height, measure);
+      }
+      setLayoutHeight(height);
       setPlaced(boxes);
     };
     if (document.fonts?.ready) void document.fonts.ready.then(draw);
@@ -99,7 +114,7 @@ export function WordCloud({
     return () => {
       cancelled = true;
     };
-  }, [concepts, playful, signature, size.h, size.w]);
+  }, [layoutConcepts, playful, size.h, size.w]);
 
   const picked = playful ? placed.find((word) => wordKey(word) === activeKey) : undefined;
   const detail = picked ? detailForConcept(picked, quotes, themes) : null;
@@ -112,13 +127,13 @@ export function WordCloud({
         <style>{`
           @keyframes chorus-drift {
             0%, 100% { transform: translate3d(0, 0, 0) rotate(var(--tilt, 0deg)) scale(1); }
-            50% { transform: translate3d(var(--dx, 14px), var(--dy, -18px), 0) rotate(calc(var(--tilt, 0deg) * -1)) scale(1.07); }
+            50% { transform: translate3d(var(--dx, 14px), var(--dy, -18px), 0) rotate(calc(var(--tilt, 0deg) * -1)) scale(1); }
           }
           .chorus-bubble { animation: chorus-drift var(--dur, 4s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
           @media (prefers-reduced-motion: reduce) { .chorus-bubble { animation: none; } }
         `}</style>
       ) : null}
-      <div ref={frame} className={`relative min-h-56 flex-1 ${playful ? "overflow-visible" : "overflow-hidden"}`}>
+      <div ref={frame} className="relative min-h-56 flex-1 overflow-auto">
         {playful ? null : (
           <ul className="sr-only">
             {concepts.map((concept) => (
@@ -128,16 +143,16 @@ export function WordCloud({
             ))}
           </ul>
         )}
-        <div className="absolute inset-0" aria-hidden={playful ? undefined : true}>
+        <div className="relative w-full" style={{height: layoutHeight || "100%"}} aria-hidden={playful ? undefined : true}>
           {placed.map((word) => {
             const key = wordKey(word);
             const color = colorForTheme(word.themeId, themeIds, tone);
             const n = hash(word.text);
             const selected = key === activeKey;
             const motion = {
-              "--dx": `${(n % 25) - 12}px`,
-              "--dy": `${-16 - (n % 18)}px`,
-              "--tilt": `${(n % 11) - 5}deg`,
+              "--dx": `${(n % 5) - 2}px`,
+              "--dy": `${-2 - (n % 3)}px`,
+              "--tilt": `0deg`,
               "--dur": `${3.2 + (n % 20) / 10}s`,
               "--delay": `${-((n % 32) / 10)}s`,
             } as CSSProperties;
@@ -145,10 +160,15 @@ export function WordCloud({
               return (
                 <span
                   key={key}
-                  className="absolute font-serif font-semibold leading-none transition-all duration-700"
+                  className="absolute font-sans font-semibold leading-none transition-all duration-700"
                   style={{
                     left: word.x,
                     top: word.y,
+                    width: word.w,
+                    height: word.h,
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-all",
+                    lineHeight: 1.25,
                     fontSize: word.fontSize,
                     color,
                   }}
@@ -161,7 +181,7 @@ export function WordCloud({
               <button
                 key={key}
                 type="button"
-                className={`chorus-bubble absolute grid cursor-pointer place-items-center px-2 text-center font-serif font-semibold leading-none transition-shadow ${
+                className={`chorus-bubble absolute grid cursor-pointer place-items-center px-2 text-center font-sans font-semibold leading-none transition-shadow ${
                   selected ? "z-30" : "z-10 hover:z-20"
                 }`}
                 style={{
@@ -170,11 +190,15 @@ export function WordCloud({
                   top: word.y,
                   width: word.w,
                   height: word.h,
+                  padding: `${Math.max(4, Math.round(word.fontSize * .3) - 4)}px ${Math.max(8, Math.round(word.fontSize * .45) - 4)}px`,
+                  overflowWrap: "anywhere",
+                  wordBreak: "break-all",
+                  lineHeight: 1.25,
                   fontSize: word.fontSize,
-                  color,
-                  background: `color-mix(in srgb, ${color} ${selected ? 42 : 28}%, ${ink ? "#211c17" : "#faf6ef"})`,
+                  color: ink ? color : "#182044",
+                  background: `color-mix(in srgb, ${color} ${selected ? 42 : 28}%, ${ink ? "#211c17" : "#ffffff"})`,
                   border: `2px solid color-mix(in srgb, ${color} ${selected ? 90 : 70}%, transparent)`,
-                  borderRadius: blobRadius(word.text),
+                  borderRadius: "50%",
                   boxShadow: selected ? `0 0 0 3px color-mix(in srgb, ${color} 35%, transparent)` : undefined,
                   animationPlayState: selected ? "paused" : "running",
                 }}
@@ -188,8 +212,8 @@ export function WordCloud({
         </div>
         {concepts.length === 0 ? (
           <p
-            className={`absolute inset-0 grid place-items-center px-8 text-center font-serif text-2xl leading-snug ${
-              ink ? "text-[#d7cbb8]" : "text-[#5c5348]"
+            className={`absolute inset-0 grid place-items-center px-8 text-center font-sans text-2xl leading-snug ${
+              ink ? "text-[#d7cbb8]" : "text-[#586380]"
             }`}
           >
             Words land here as responses come in.
@@ -199,16 +223,16 @@ export function WordCloud({
       {picked && detail ? (
         <aside
           className={`absolute inset-x-0 bottom-0 z-20 max-h-[46%] overflow-auto rounded-[1.6rem] border p-5 shadow-2xl ${
-            ink ? "border-[#3a332b] bg-[#211c17] text-[#f3ecdf]" : "border-[#d9cdb8] bg-[#faf6ef] text-[#1e1a16]"
+            ink ? "border-[#3a332b] bg-[#211c17] text-[#f5f7fc]" : "border-[#dbe1ef] bg-[#ffffff] text-[#182044]"
           }`}
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className={`text-xs tracking-[0.16em] uppercase ${ink ? "text-[#d7cbb8]" : "text-[#b8612d]"}`}>
+              <p className={`text-xs tracking-[0.16em] uppercase ${ink ? "text-[#d7cbb8]" : "text-[#5138ed]"}`}>
                 {detail.themeLabel ?? "Across the room"}
               </p>
-              <h3 className="mt-1 font-serif text-3xl leading-none">{picked.text}</h3>
-              <p className={`mt-2 text-sm leading-relaxed ${ink ? "text-[#e7dccb]" : "text-[#5c5348]"}`}>
+              <h3 className="mt-1 font-sans text-3xl leading-none">{picked.text}</h3>
+              <p className={`mt-2 text-sm leading-relaxed ${ink ? "text-[#edf0fa]" : "text-[#586380]"}`}>
                 {detail.direct
                   ? `${detail.quotes.length} ${detail.quotes.length === 1 ? "line uses" : "lines use"} this.`
                   : detail.themeSummary || "These lines sit in the same thread."}
@@ -216,7 +240,7 @@ export function WordCloud({
             </div>
             <button
               type="button"
-              className={`shrink-0 rounded-full px-3 py-1 text-sm ${ink ? "bg-white/10" : "bg-[#e7dccb]"}`}
+              className={`shrink-0 rounded-full px-3 py-1 text-sm ${ink ? "bg-white/10" : "bg-[#edf0fa]"}`}
               onClick={() => choose(null)}
             >
               Close
@@ -225,9 +249,9 @@ export function WordCloud({
           {shown.length > 0 ? (
             <ul className="mt-4 space-y-3">
               {shown.map((quote) => (
-                <li key={quote.id} className="font-serif text-lg leading-snug">
+                <li key={quote.id} className="font-sans text-lg leading-snug">
                   {showNames && quote.label ? (
-                    <span className={`mb-1 block font-sans text-xs ${ink ? "text-[#d7cbb8]" : "text-[#5c5348]"}`}>
+                    <span className={`mb-1 block font-sans text-xs ${ink ? "text-[#d7cbb8]" : "text-[#586380]"}`}>
                       {quote.label}
                     </span>
                   ) : null}
@@ -236,12 +260,12 @@ export function WordCloud({
               ))}
             </ul>
           ) : (
-            <p className={`mt-4 text-sm ${ink ? "text-[#d7cbb8]" : "text-[#5c5348]"}`}>
+            <p className={`mt-4 text-sm ${ink ? "text-[#d7cbb8]" : "text-[#586380]"}`}>
               Group the room to attach this word to the lines that used it.
             </p>
           )}
           {extra > 0 ? (
-            <p className={`mt-3 text-sm ${ink ? "text-[#d7cbb8]" : "text-[#5c5348]"}`}>
+            <p className={`mt-3 text-sm ${ink ? "text-[#d7cbb8]" : "text-[#586380]"}`}>
               Plus {extra} more in this thread. The desk has every line.
             </p>
           ) : null}
@@ -252,7 +276,7 @@ export function WordCloud({
           {legend.map((item) => (
             <li key={item.id} className="flex items-center gap-2 text-sm">
               <span className="size-2.5 rounded-full" style={{ background: colorForTheme(item.id, themeIds, tone) }} />
-              <span className={ink ? "text-[#f3ecdf]" : "text-[#1e1a16]"}>{item.label}</span>
+              <span className={ink ? "text-[#f5f7fc]" : "text-[#182044]"}>{item.label}</span>
             </li>
           ))}
         </ul>

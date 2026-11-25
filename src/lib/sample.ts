@@ -10,6 +10,7 @@ export type SampleFacet =
   | "voice"
   | "brainstorm"
   | "dependency"
+  | `zh-${"feedback" | "access" | "literacy" | "voice" | "dependency"}`
   | "aside";
 
 export type SampleLine = {
@@ -213,4 +214,34 @@ export const SAMPLE_LINES: SampleLine[] = [
     facet: "aside",
     text: "I mostly want longer office hours. I need a person to tell me if the argument holds.",
   },
+  // Thirty-student demo: 15 support draft feedback, 8 equal access; smaller groups remain.
+  {"who": "classmate-01", "name": "Demo student 23", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "classmate-02", "name": "Demo student 24", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "classmate-03", "name": "Demo student 25", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "classmate-04", "name": "Demo student 26", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "classmate-05", "name": "Demo student 27", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "classmate-06", "name": "Demo student 28", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "classmate-07", "name": "Demo student 29", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "classmate-08", "name": "Demo student 30", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "maya", "name": "Maya Chen", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "unnamed-b", "name": null, "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "lena", "name": "Lena Cho", "facet": "feedback", "text": "Let us use it for feedback on a draft, but the piece we hand in has to be our rewrite. I want comments on my version, not a finished answer I didn't earn."},
+  {"who": "classmate-01", "name": "Demo student 23", "facet": "access", "text": "People with a paid subscription get a better model. That is an access problem. We should only expect tools everyone can open."},
+  {"who": "classmate-02", "name": "Demo student 24", "facet": "access", "text": "People with a paid subscription get a better model. That is an access problem. We should only expect tools everyone can open."},
+  {"who": "classmate-03", "name": "Demo student 25", "facet": "access", "text": "People with a paid subscription get a better model. That is an access problem. We should only expect tools everyone can open."},
+  {"who": "classmate-04", "name": "Demo student 26", "facet": "access", "text": "People with a paid subscription get a better model. That is an access problem. We should only expect tools everyone can open."},
 ];
+
+/** Typography fixtures: actual scripted participants support each Chinese concept. */
+export const CHINESE_DEMO_CONCEPTS = [
+  {facet:"feedback",supporters:15,text:"先完成自己的文章，再參考人工智能的建議修改內容與表達方式"},
+  {facet:"access",supporters:8,text:"希望每位同學都能使用相同工具，不因付費方案而影響學習機會"},
+  {facet:"literacy",supporters:3,text:"引用人工智能提供的資料前，應先核實來源是否可靠及真實"},
+  {facet:"voice",supporters:1,text:"即使使用人工智能協助寫作，也應保留自己的語氣和個人觀點"},
+  {facet:"dependency",supporters:3,text:"遇到難題先自己思考與嘗試，不要立即依賴 AI 提供完整答案"},
+] as const;
+
+for(const concept of CHINESE_DEMO_CONCEPTS){
+  const students=[...new Map(SAMPLE_LINES.filter(line=>line.facet===concept.facet).map(line=>[line.who,line])).values()];
+  SAMPLE_LINES.push(...students.slice(0,concept.supporters).map(student=>({...student,facet:`zh-${concept.facet}` as SampleFacet,text:concept.text})));
+}

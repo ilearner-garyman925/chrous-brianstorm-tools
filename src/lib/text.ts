@@ -77,11 +77,18 @@ export type Tokens = {
 };
 
 export function tokenize(text: string): Tokens {
-  const normalized = expandContractions(text).replace(/[^a-z0-9\s]/g, " ");
-  const raw = normalized.split(/\s+/).filter(Boolean);
+  const normalized = expandContractions(text).replace(/[^\p{L}\p{N}\s]/gu, " ");
+  const raw = Array.from(new Intl.Segmenter("zh", {granularity:"word"}).segment(normalized))
+    .filter(part => part.isWordLike).map(part => part.segment);
   const stems: string[] = [];
   const surfaces: string[] = [];
   for (const token of raw) {
+    if (/\p{Script=Han}/u.test(token)) {
+      if (!new Set(["我","你","他","她","我們","我们","的","了","是","在","和","也","就","都","覺得","觉得"]).has(token)) {
+        stems.push(token); surfaces.push(token);
+      }
+      continue;
+    }
     if (token.length < 3 || STOP.has(token) || /^\d+$/.test(token)) continue;
     const stem = stemWord(token);
     if (stem.length < 3 || STOP.has(stem)) continue;
@@ -104,7 +111,7 @@ export function promptStemSet(prompt: string): Set<string> {
 export function prettyPhrase(surface: string): string {
   return surface
     .split(/\s+/)
-    .map((part) => part.toLowerCase().replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, ""))
+    .map((part) => part.toLowerCase().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""))
     .filter(Boolean)
     .map((part) => {
       if (part === "ai") return "AI";

@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# Local visual checks and generated previews
+/output/
+
 # next.js
 /.next/
 /out/

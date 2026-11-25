@@ -14,100 +14,50 @@ export type PlacedWord = CloudWord & {
 
 type Measure = (text: string, fontSize: number) => { w: number; h: number };
 
-function overlaps(
-  a: { x: number; y: number; w: number; h: number },
-  b: { x: number; y: number; w: number; h: number },
-  pad: number,
-): boolean {
-  return !(
-    a.x + a.w + pad <= b.x ||
-    b.x + b.w + pad <= a.x ||
-    a.y + a.h + pad <= b.y ||
-    b.y + b.h + pad <= a.y
-  );
+function intersects(a: PlacedWord, b: PlacedWord, gap: number) {
+  return !(a.x+a.w+gap<=b.x || b.x+b.w+gap<=a.x || a.y+a.h+gap<=b.y || b.y+b.h+gap<=a.y);
 }
 
-function fontFor(
-  weight: number,
-  minW: number,
-  maxW: number,
-  width: number,
-  height: number,
-): number {
-  const span = maxW - minW || 1;
-  const t = Math.pow(Math.max(0, weight - minW) / span, 0.72);
-  const max = Math.max(32, Math.min(width, height) / 6.4);
-  return Math.round(15 + t * (max - 15));
-}
-
-function placeOne(
-  word: CloudWord,
-  fontSize: number,
-  width: number,
-  height: number,
-  measure: Measure,
-  placed: PlacedWord[],
-  steps: number,
-): PlacedWord | null {
-  let size = fontSize;
-  let box = measure(word.text, size);
-  while ((box.w > width - 16 || box.h > height - 16) && size > 12) {
-    size -= 2;
-    box = measure(word.text, size);
-  }
-  if (box.w > width - 8 || box.h > height - 8) return null;
-
-  const cx = width / 2;
-  const cy = height / 2;
-  const yScale = Math.max(0.55, Math.min(1, height / Math.max(width, 1)));
-
-  for (let i = 0; i < steps; i += 1) {
-    const angle = i * 0.42;
-    const radius = angle * 3.15;
-    const x = cx + Math.cos(angle) * radius - box.w / 2;
-    const y = cy + Math.sin(angle) * radius * yScale - box.h / 2;
-    if (x < 6 || y < 6 || x + box.w > width - 6 || y + box.h > height - 6) {
-      continue;
+/** Seeded best-candidate packing: use the entire canvas, never a row or spiral. */
+export function layoutCloud(words: CloudWord[], width: number, height: number, measure: Measure, constellation = false): PlacedWord[] {
+  if (width < 40 || height < 40 || !words.length) return [];
+  const sorted = [...words].sort((a,b)=>b.weight-a.weight || a.text.localeCompare(b.text));
+  const min = Math.min(...sorted.map(w=>w.weight));
+  const max = Math.max(...sorted.map(w=>w.weight));
+  let best: PlacedWord[] = [];
+  const mobile = width < 480;
+  const groups = [...new Set(sorted.map(word => word.themeId))];
+  // Retry at progressively smaller sizes before asking the UI for more height.
+  for (let attempt=0; attempt<(constellation ? 14 : 9); attempt++) {
+    let seed = 7919;
+    const random = () => { seed = (Math.imul(seed,1664525)+1013904223)>>>0; return seed/4294967296; };
+    const placed: PlacedWord[] = [];
+    const gap = mobile ? 14 : Math.max(10, 22-attempt*2);
+    for (const word of sorted) {
+      const importance = max===min ? .5 : (word.weight-min)/(max-min);
+      const fontSize = Math.max(mobile ? 18 : 16, Math.round((mobile ? 22+importance*12 : 24+importance*24)*(1-attempt*.065)));
+      const box = measure(word.text,fontSize);
+      if (box.w>width-20 || box.h>height-20) continue;
+      let chosen: PlacedWord | null = null;
+      let score = -Infinity;
+      for (let i=0;i<1400;i++) {
+        const candidate = {...word,...box,fontSize,x:10+random()*(width-box.w-20),y:10+random()*(height-box.h-20)};
+        if (placed.some(other=>intersects(candidate,other,gap))) continue;
+        const cx=candidate.x+box.w/2, cy=candidate.y+box.h/2;
+        // Farthest-point placement spreads later concepts into unused regions.
+        const distance = placed.length ? Math.min(...placed.map(other=>Math.hypot((cx-other.x-other.w/2)/width,(cy-other.y-other.h/2)/height))) : -Math.hypot(cx/width-.38,cy/height-.35);
+        const groupIndex = groups.indexOf(word.themeId);
+        const angle = groupIndex * 2.39996;
+        const anchorX = mobile ? .5 + Math.sin(angle) * .2 : .5 + Math.cos(angle) * .32;
+        const anchorY = mobile ? (groupIndex + .5) / groups.length : .5 + Math.sin(angle) * .32;
+        const groupDistance = Math.hypot(cx / width - anchorX, cy / height - anchorY);
+        const candidateScore = constellation ? distance * .2 - groupDistance : distance;
+        if (candidateScore>score) {score=candidateScore;chosen=candidate;}
+      }
+      if (chosen) placed.push(chosen);
     }
-    const candidate = { x, y, w: box.w, h: box.h };
-    if (placed.some((other) => overlaps(candidate, other, 6))) continue;
-    return { ...word, x, y, w: box.w, h: box.h, fontSize: size };
+    if (placed.length>best.length) best=placed;
+    if (placed.length===words.length) return placed;
   }
-  return null;
-}
-
-export function layoutCloud(
-  words: CloudWord[],
-  width: number,
-  height: number,
-  measure: Measure,
-): PlacedWord[] {
-  if (width < 40 || height < 40 || words.length === 0) return [];
-  const sorted = [...words].sort((a, b) => {
-    if (b.weight !== a.weight) return b.weight - a.weight;
-    return a.text.localeCompare(b.text);
-  });
-  const weights = sorted.map((word) => word.weight);
-  const maxW = Math.max(...weights);
-  const minW = Math.min(...weights);
-  const placed: PlacedWord[] = [];
-  const missed: CloudWord[] = [];
-
-  for (const word of sorted) {
-    const fontSize = fontFor(word.weight, minW, maxW, width, height);
-    const box = placeOne(word, fontSize, width, height, measure, placed, 720);
-    if (box) placed.push(box);
-    else missed.push(word);
-  }
-
-  for (const word of missed) {
-    const fontSize = Math.max(
-      12,
-      fontFor(word.weight, minW, maxW, width, height) * 0.72,
-    );
-    const box = placeOne(word, fontSize, width, height, measure, placed, 1100);
-    if (box) placed.push(box);
-  }
-
-  return placed;
+  return best;
 }

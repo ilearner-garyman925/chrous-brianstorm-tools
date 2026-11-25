@@ -1,0 +1,90 @@
+/* Chorus identity: layout and depth geometry belong to orbit.css. */
+:root {
+  --brand-petrol:#163b50; --brand-teal:#4c9f91; --brand-gold:#e9bc59;
+  --background:#f8f7f2; --foreground:#163b50; --primary:#163b50;
+  --primary-foreground:#fff; --ring:#4c9f91;
+}
+.chorus-brand {color:var(--brand-petrol);flex-shrink:0;}
+.chorus-wordmark {font-size:25px;font-weight:650;letter-spacing:-.04em;line-height:1.1;}
+.chorus-mark {flex-shrink:0;overflow:visible;}
+.chorus-brand-light,.orbit-shell .chorus-brand,.orbit-presenter .chorus-brand {color:#f8f7f2;}
+html[data-appearance=light] .chorus-brand {color:var(--brand-petrol);}
+.orbit-shell .chorus-mark,.orbit-student .chorus-mark {filter:drop-shadow(0 0 1px #ffffff60);}
+:is(.orbit-shell.desk-shell,.orbit-presenter,.orbit-student) {--primary:#287e74;--primary-foreground:#fff;--ring:#78cabc;}
+.orbit-shell .canvas-toolbar [role=tab][aria-selected=true] {background:#286e66;box-shadow:inset 0 1px #9ce0cf55;}
+.orbit-shell .desk-header [data-slot=button]:last-child,
+.orbit-shell .desk-controls>button:first-child,
+.orbit-utility-panel [data-slot=button] {background:#287e74;color:white;box-shadow:none;}
+.orbit-shell button:focus-visible,.orbit-presenter button:focus-visible {outline-color:#78cabc;}
+.orbit-text-size-levels .is-active {background:#78cabc;}
+
+html[data-appearance=light] {
+  color-scheme:light;
+  --background:#f8f7f2;--foreground:#163b50;--card:#fffefa;--card-foreground:#163b50;
+  --popover:#fffefa;--popover-foreground:#163b50;--border:#cbd3ce;--input:#bbc9c3;
+  --primary:#163b50;--primary-foreground:#fff;--muted:#eeefe8;--muted-foreground:#526b72;
+  --secondary:#e1eee8;--secondary-foreground:#163b50;--accent:#d9eee7;--accent-foreground:#163b50;
+}
+html[data-appearance=light] :is(.orbit-shell.desk-shell,.orbit-presenter,.orbit-student) {
+  --background:#f8f7f2;--foreground:#163b50;--card:#fffefa;--card-foreground:#163b50;
+  --primary:#163b50;--primary-foreground:#fff;--secondary:#e1eee8;--secondary-foreground:#163b50;
+  --muted:#eeefe8;--muted-foreground:#526b72;--accent:#d9eee7;--accent-foreground:#163b50;
+  --border:#cbd3ce;--input:#bbc9c3;
+  background:#f8f7f2;color:#163b50;
+}
+html[data-appearance=light] .orbit-presenter {background-color:#f8f7f2!important;}
+html[data-appearance=light] :is(.orbit-dock .canvas-toolbar,.orbit-dock .desk-controls,.orbit-shell .voices-panel,.orbit-utility-panel,.student-card) {
+  background:#fffefaF5;color:#163b50;border-color:#cbd3ce;box-shadow:0 6px 24px #163b5010;
+}
+html[data-appearance=light] .orbit-shell .canvas-toolbar [role=tab][aria-selected=true] {background:#d3ece3;color:#163b50;box-shadow:none;}
+html[data-appearance=light] .orbit-shell .desk-header [data-slot=button]:last-child,
+html[data-appearance=light] .orbit-shell .desk-controls>button:first-child,
+html[data-appearance=light] .orbit-utility-panel [data-slot=button] {background:#163b50;color:#fff;}
+html[data-appearance=light] :is(.orbit-shell,.orbit-presenter) [class*="bg-[#"] {background:#fffefa;border-color:#cbd3ce;}
+html[data-appearance=light] .orbit-speech {color:#163b50;text-shadow:none;}
+html[data-appearance=light] .orbit-speech-surface path:first-of-type {fill:#f8f7f2;fill-opacity:1;}
+html[data-appearance=light] .orbit-speech-surface path:last-of-type {
+  fill:color-mix(in srgb,var(--node-color) 28%,#f8f7f2);
+  stroke:color-mix(in srgb,var(--node-color) 55%,#52776e);fill-opacity:1;
+}
+html[data-appearance=light] .orbit-speech-surface,
+html[data-appearance=light] .orbit-reader .orbit-speech-surface {filter:drop-shadow(0 3px 4px #163b5015);}
+html[data-appearance=light] .orbit-speech:hover .orbit-speech-surface {filter:drop-shadow(0 4px 6px #163b5025);}
+html[data-appearance=light] .orbit-speech[aria-pressed=true] .orbit-speech-surface {filter:drop-shadow(0 4px 8px #163b502b);}
+html[data-appearance=light] .orbit-speech[aria-pressed=true] .orbit-speech-surface path:last-of-type {stroke:#247769;stroke-width:2;}
+html[data-appearance=light] :is(.orbit-reader-panel,.settings-popup[data-slot=dialog-content],.student-history-panel[data-slot=dialog-content]) {
+  background:#fffefa;color:#163b50;border-color:#cbd3ce;--popover-foreground:#163b50;
+}
+html[data-appearance=light] :is(.orbit-depth-count,.orbit-text-size,.orbit-meta select,.orbit-meta option) {background:#f8f7f2;color:#163b50;border-color:#bdcbc5;}
+html[data-appearance=light] .orbit-text-size-levels .is-active {background:#287e74;}
+html[data-appearance=light] :is(.orbit-empty p,.orbit-empty span) {color:#526b72;}
+html[data-appearance=light] .orbit-action-tooltip {background:#163b50;color:white;border-color:#163b50;}
+html[data-appearance=light] .student-sent-bubble {background:#d3ece3;color:#163b50;border-color:#4c9f91;box-shadow:0 6px 20px #163b5022;}
+html[data-appearance=light] .settings-done {background:#163b50;color:white;}
+@media(max-width:600px) {.chorus-wordmark{font-size:21px;}.chorus-mark{width:34px;height:34px;}}
+html[data-appearance=light] .orbit-slider-track {background:#eeefe9;border-color:#bdcbc5;box-shadow:0 3px 12px #163b5010;}
+html[data-appearance=light] .orbit-slider-track::before {background:#8ba69d55;}
+html[data-appearance=light] .orbit-depth-stop i {box-shadow:none;}
+/* Compact vertical dock items, with the same feedback for mouse and keyboard. */
+.chorus-mark{width:52px;height:50px;}
+.chorus-wordmark{font-size:30px;}
+.orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button){flex-direction:column;justify-content:center;gap:5px;min-width:68px;height:58px;min-height:58px;padding:7px 12px;border-radius:16px;line-height:1.2;transition:background 160ms ease,box-shadow 160ms ease,transform 160ms ease;}
+.orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button) svg{width:21px;height:21px;transition:transform 160ms ease;}
+.orbit-shell .canvas-actions .orbit-primary-group{border-left:0;}
+.orbit-shell .canvas-toolbar [role=tab][aria-selected=true]{border-radius:16px;}
+@media(hover:hover){
+ .orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button):hover:not(:disabled){background:#4c9f9138;box-shadow:inset 0 0 0 1px #80c9bd66;transform:translateY(-2px);}
+ .orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button):hover:not(:disabled) svg{transform:translateY(-1px);}
+ html[data-appearance=light] .orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button):hover:not(:disabled){background:#d3ece3;box-shadow:inset 0 0 0 1px #8abeb1;}
+}
+.orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button):focus-visible{outline:2px solid #4c9f91;outline-offset:2px;}
+@media(max-width:600px){
+ .chorus-mark{width:40px;height:38px;}.chorus-wordmark{font-size:24px;}
+ .orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button){min-width:0;height:50px;min-height:50px;padding:5px 7px;gap:4px;font-size:10px;}
+ .orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button) svg{width:19px;height:19px;}
+}
+@media(prefers-reduced-motion:reduce){
+ .orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button),.orbit-shell .canvas-toolbar :is([role=tab],.canvas-actions button) svg{transition:none;transform:none!important;}
+}
+/* Allow the measured dock clearance to win over the generic map minimum. */
+.orbit-shell .cloud-canvas .orbit-map{min-height:0;}

@@ -1,8 +1,8 @@
+import { phraseConcepts } from "@/lib/concept-phrases";
 import type { Concept, GroupDraft, Tension } from "@/lib/types";
 import {
   prettyPhrase,
   promptStemSet,
-  shortPhrase,
   tokenize,
   type Tokens,
 } from "@/lib/text";
@@ -276,37 +276,8 @@ export function liveConcepts(
   prompt: string,
   items: { id: string; text: string }[],
 ): Concept[] {
-  if (items.length === 0) return [];
-  const promptStems = promptStemSet(prompt);
-  const counts = new Map<string, { text: string; weight: number }>();
-  const phrases = new Map<string, number>();
-  for (const item of items) {
-    const tokens = tokenize(item.text);
-    const seen = new Set<string>();
-    tokens.stems.forEach((stem, index) => {
-      if (promptStems.has(stem) || seen.has(stem)) return;
-      seen.add(stem);
-      const text = prettyPhrase(tokens.surfaces[index] ?? stem);
-      const current = counts.get(stem) ?? { text, weight: 0 };
-      current.weight += 1;
-      if (text.length < current.text.length) current.text = text;
-      counts.set(stem, current);
-    });
-    const phrase = shortPhrase(item.text);
-    if (phrase) phrases.set(phrase.toLowerCase(), (phrases.get(phrase.toLowerCase()) ?? 0) + 1);
-  }
-  const concepts: Concept[] = [];
-  for (const value of counts.values()) {
-    if (value.weight < 2 && items.length > 4) continue;
-    concepts.push({ text: value.text, weight: value.weight, themeId: null });
-  }
-  for (const [key, weight] of phrases) {
-    const text = prettyPhrase(key);
-    const words = text.split(/\s+/).filter(Boolean).length;
-    if (!text || (weight < 2 && words > 2 && items.length > 4)) continue;
-    concepts.push({ text, weight: weight + 1, themeId: null });
-  }
-  return scaleConcepts(concepts, 24);
+  void prompt;
+  return phraseConcepts(items);
 }
 
 export function groupLocally(
@@ -366,30 +337,7 @@ export function groupLocally(
     };
   });
 
-  const concepts: Concept[] = [];
-  for (const theme of themes) {
-    const stems = theme.terms.filter((term) => !term.term.includes(" ")).slice(0, 5);
-    for (const term of stems) {
-      const users = theme.members.filter((doc) => doc.stems.includes(term.term)).length;
-      if (users === 0) continue;
-      concepts.push({
-        text: surfaceFor(term.term, theme.members),
-        weight: users,
-        themeId: theme.id,
-      });
-    }
-    const phraseCounts = new Map<string, number>();
-    for (const member of theme.members) {
-      const phrase = shortPhrase(member.text);
-      if (!phrase) continue;
-      phraseCounts.set(phrase, (phraseCounts.get(phrase) ?? 0) + 1);
-    }
-    for (const [phrase, weight] of phraseCounts) {
-      const words = phrase.split(/\s+/).filter(Boolean).length;
-      if (weight < 2 && words > 2) continue;
-      concepts.push({ text: phrase, weight: weight + 1, themeId: theme.id });
-    }
-  }
+  const concepts = themes.flatMap(theme => phraseConcepts(theme.members, theme.id, 4));
 
   const tensions: Tension[] = [];
   const polarity = polarityTension(docs);

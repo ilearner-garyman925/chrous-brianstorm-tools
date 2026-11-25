@@ -1,3 +1,4 @@
+import { phraseConcepts } from "@/lib/concept-phrases";
 import { z } from "zod";
 import type { Concept, GroupDraft, Theme, Tension } from "@/lib/types";
 
@@ -10,7 +11,7 @@ Theme labels are 2–5 words a teacher could say aloud.
 Summaries are one or two concrete sentences, without praising the students.
 Name at most two tensions: real disagreements or tradeoffs that are present in the texts.
 Follow-up prompts are open questions that would deepen the next round. No yes/no questions.
-Concepts are the ideas a word cloud should show. Merge paraphrases. Weight is 1 to 10.
+Concepts are short meaningful statements, NOT isolated keywords: usually 2–6 English words or 4–14 Chinese characters. Preserve the language of each response, negation, stance and important qualifiers. Use readable phrases such as "AI costs too much" or "保留自己的聲音". Merge only equivalent ideas, never opposing views. For each concept supply responseIds containing all supporting input responses. Never include opposing views. The server computes weight from distinct participants; do not guess popularity.
 If a response is off-topic, put it in a theme called "Asides".`;
 
 const ModelSchema = z.object({
@@ -44,6 +45,7 @@ const ModelSchema = z.object({
         text: z.string(),
         weight: z.coerce.number().optional(),
         themeLabel: z.string().optional(),
+        responseIds: z.array(z.string()).optional(),
       }),
     )
     .optional(),
@@ -135,25 +137,23 @@ export function normalizeModelResult(
   const labelToId = new Map(themes.map((theme) => [theme.label.toLowerCase(), theme.id]));
   let concepts: Concept[] = (data.concepts ?? [])
     .map((concept) => {
-      const text = clip(concept.text, 36);
+      const text = clip(concept.text, 64);
       if (!text) return null;
       const themeId = concept.themeLabel
         ? (labelToId.get(concept.themeLabel.toLowerCase()) ?? null)
         : null;
       const weight = Math.max(1, Math.min(10, Math.round(concept.weight ?? 4)));
-      return { text, weight, themeId };
+      const responseIds = concept.responseIds ? [...new Set(concept.responseIds)].filter(id =>
+        known.has(id) && (!themeId || themes.find(theme=>theme.id===themeId)?.responseIds.includes(id))) : undefined;
+      return { text, weight, themeId, ...(responseIds ? {responseIds} : {}) };
     })
     .filter((concept): concept is Concept => concept !== null)
     .slice(0, 32);
 
   if (concepts.length === 0) {
-    concepts = themes.flatMap((theme) =>
-      theme.keywords.slice(0, 3).map((keyword, index) => ({
-        text: keyword,
-        weight: Math.max(3, 8 - index),
-        themeId: theme.id,
-      })),
-    );
+    concepts = themes.flatMap(theme => phraseConcepts(
+      items.filter(item => theme.responseIds.includes(item.id)), theme.id, 3
+    ));
   }
 
   const tensions: Tension[] = (data.tensions ?? []).slice(0, 2).map((tension, index) => {
@@ -258,7 +258,7 @@ export async function groupWithModel(
                   },
                 ],
                 followUps: ["string"],
-                concepts: [{ text: "string", weight: 1, themeLabel: "string" }],
+                concepts: [{ text: "string", themeLabel: "string", responseIds: ["id"] }],
               },
             }),
           },

@@ -1,21 +1,21 @@
 export const PAPER_THEME_COLORS = [
-  "#b8612d",
-  "#1f6a56",
-  "#1f5f86",
-  "#9c3b3b",
-  "#6d4a86",
-  "#8a6416",
-  "#3d5a45",
+  "#45b98a",
+  "#7a83ed",
+  "#ef9a4c",
+  "#e673ad",
+  "#a27cdc",
+  "#48adc3",
+  "#a6a13d",
 ];
 
 export const INK_THEME_COLORS = [
-  "#e2a15a",
-  "#7dcea0",
-  "#8eb8d4",
-  "#e08b84",
-  "#c9b6e3",
-  "#e6d27a",
-  "#9bbf8a",
+  "#43dce5",
+  "#a294ff",
+  "#f08e89",
+  "#e9b95f",
+  "#6fddb5",
+  "#92b8ff",
+  "#e697d9",
 ];
 
 export function colorForTheme(

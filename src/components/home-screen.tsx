@@ -85,18 +85,18 @@ export function HomeScreen() {
 
       <section className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div>
-          <p className="text-sm tracking-wide text-[#5c5348] uppercase">For a live room</p>
-          <h1 className="mt-3 max-w-xl font-serif text-5xl leading-[1.05] text-[#1e1a16] sm:text-6xl">
+          <p className="text-sm tracking-wide text-[#586380] uppercase">For a live room</p>
+          <h1 className="mt-3 max-w-xl font-sans text-5xl leading-[1.05] text-[#182044] sm:text-6xl">
             See the shape of the discussion.
           </h1>
-          <p className="mt-5 max-w-xl text-lg leading-relaxed text-[#3c342c]">
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-[#354361]">
             Students answer in their own words. You watch the room fill, then group it into themes,
             a cloud colored by meaning, the tensions, and a next question worth asking.
           </p>
         </div>
-        <div className="h-80 rounded-3xl border border-[#d9cdb8] bg-[#faf6ef] p-4">
+        <div className="h-80 rounded-3xl border border-[#dbe1ef] bg-[#ffffff] p-4">
           <WordCloud concepts={PREVIEW} themeIds={THEME_IDS} tone="paper" playful />
-          <p className="text-center text-xs text-[#5c5348]">Sample room · how this class should use AI</p>
+          <p className="text-center text-xs text-[#586380]">Sample room · how this class should use AI</p>
         </div>
       </section>
 
@@ -106,10 +106,10 @@ export function HomeScreen() {
           ["2", "Let them write", "A few sentences, not a single sticker-word. Shy students can stay unnamed."],
           ["3", "Group the room", "Themes, a cloud, and the disagreement hiding under the popular answer."],
         ].map(([step, heading, body]) => (
-          <div key={step} className="rounded-2xl border border-[#d9cdb8] bg-[#faf6ef] p-5">
-            <p className="font-serif text-3xl text-[#b8612d]">{step}</p>
-            <h2 className="mt-2 font-serif text-2xl">{heading}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-[#5c5348]">{body}</p>
+          <div key={step} className="rounded-2xl border border-[#dbe1ef] bg-[#ffffff] p-5">
+            <p className="font-sans text-3xl text-[#5138ed]">{step}</p>
+            <h2 className="mt-2 font-sans text-2xl">{heading}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#586380]">{body}</p>
           </div>
         ))}
       </section>
@@ -117,7 +117,7 @@ export function HomeScreen() {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
         <Card>
           <CardHeader>
-            <CardTitle className="font-serif text-3xl">Host a discussion</CardTitle>
+            <CardTitle className="font-sans text-3xl">Host a discussion</CardTitle>
             <CardDescription>
               Responses stay on this server until you delete the room. Names, if shared, appear only on your desk — never on the projector.
             </CardDescription>
@@ -175,7 +175,7 @@ export function HomeScreen() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="font-serif text-3xl">Join a room</CardTitle>
+            <CardTitle className="font-sans text-3xl">Join a room</CardTitle>
             <CardDescription>The code is on the board, or in the link your teacher sent.</CardDescription>
           </CardHeader>
           <CardContent>

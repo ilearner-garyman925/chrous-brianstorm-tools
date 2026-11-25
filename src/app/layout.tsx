@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { PreferencesProvider } from "@/components/preferences";
 import "./globals.css";
+import "./orbit.css";
+import "./concept-font.css";
+import "./preferences.css";
+import "./brand-theme.css";
+import "./themes.css";
+import "./tensions.css";
+import "./more-menu.css";
+import "./student-layout.css";
+import "./teacher-history.css";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -12,6 +22,7 @@ const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
 });
+
 
 export const metadata: Metadata = {
   title: "Chorus",
@@ -24,8 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${outfit.variable} ${fraunces.variable} h-full antialiased`}>
       <body className="min-h-full">
-        {children}
-        <Toaster position="top-center" />
+        <PreferencesProvider>{children}<Toaster position="top-center" /></PreferencesProvider>
       </body>
     </html>
   );

@@ -8,9 +8,9 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-serif: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-fraunces), Georgia, serif;
+  --font-heading: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -50,24 +50,24 @@
 }
 
 :root {
-  --background: #f3ecdf;
-  --foreground: #1e1a16;
-  --card: #faf6ef;
-  --card-foreground: #1e1a16;
-  --popover: #faf6ef;
-  --popover-foreground: #1e1a16;
-  --primary: #1e1a16;
-  --primary-foreground: #f7f1e6;
-  --secondary: #e7dccb;
-  --secondary-foreground: #1e1a16;
-  --muted: #e7dccb;
-  --muted-foreground: #5c5348;
-  --accent: #f0e2cf;
-  --accent-foreground: #1e1a16;
+  --background: #f5f7fc;
+  --foreground: #182044;
+  --card: #ffffff;
+  --card-foreground: #182044;
+  --popover: #ffffff;
+  --popover-foreground: #182044;
+  --primary: #182044;
+  --primary-foreground: #ffffff;
+  --secondary: #edf0fa;
+  --secondary-foreground: #182044;
+  --muted: #edf0fa;
+  --muted-foreground: #586380;
+  --accent: #eef0ff;
+  --accent-foreground: #182044;
   --destructive: #9c3b3b;
-  --border: #d9cdb8;
-  --input: #cfc3ad;
-  --ring: #b8612d;
+  --border: #dbe1ef;
+  --input: #c9d2e5;
+  --ring: #5138ed;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -152,4 +152,52 @@
     background-image: radial-gradient(circle at 1px 1px, rgb(30 26 22 / 0.035) 1px, transparent 0);
     background-size: 18px 18px;
   }
+}/* Classroom workspace: shared visual tokens, responsive content-first layout. */
+:root { --primary:#5138ed; --primary-foreground:#fff; --ring:#7261f1; }
+body { background-image:none; }
+button, input, textarea { touch-action:manipulation; }
+h1,h2,h3 { letter-spacing:-.025em; }
+.desk-shell { display:grid; grid-template-columns:112px minmax(0,1fr); gap:12px 16px; max-width:2400px; margin:auto; padding:0 24px 24px; }
+.desk-header { grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid var(--border); }
+.desk-question { grid-column:2; background:#ffead7; padding:14px 20px; border-radius:16px; }
+.desk-rounds { grid-column:1; grid-row:2/8; display:flex; flex-direction:column; align-items:stretch; gap:12px; padding:12px 16px 0 0; border-right:1px solid var(--border); }
+.desk-rounds h2 {font-size:17px; font-weight:600; margin-bottom:8px;}
+.desk-rounds button { min-height:60px; flex-direction:column; justify-content:center; gap:6px; padding:8px; white-space:normal; }
+.round-status {font-size:11px; border-radius:20px; padding:3px 7px; background:#ffffff30; }
+.desk-rounds p {margin-top:auto; padding-top:40px; color:var(--muted-foreground); font-size:12px;}
+.desk-controls {grid-column:2; display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding:16px; background:white; border:1px solid var(--border); border-radius:18px; grid-row:6;}
+.desk-shell > p {grid-column:2; margin:0; font-size:13px;}
+.desk-workspace {grid-column:2; grid-row:3; display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:16px; align-items:start;}
+.discussion-canvas {padding:20px; background:white; border:1px solid var(--border); border-radius:20px; min-height:380px;}
+.cloud-canvas {height:clamp(480px,68vh,900px);}
+.voices-panel {border:1px solid var(--border); background:white; border-radius:20px; padding:14px; max-height:84vh; overflow:auto; overflow-wrap:anywhere;}
+.voices-panel h2 {font-weight:600;}
+.voices-panel li {padding:16px; box-shadow:0 2px 8px #18204404;}
+.desk-footer {grid-column:2; padding-top:12px;}
+.desk-header button,.desk-workspace [role=tab] {min-height:42px; padding-inline:16px;}
+.desk-workspace [role=tab][aria-selected=true] {background:#5138ed; color:white; border-radius:10px;}
+@media(max-width:1100px) { .desk-shell{grid-template-columns:100px minmax(0,1fr);gap:16px;} .desk-workspace{grid-template-columns:minmax(0,1fr) 210px;gap:14px;} .discussion-canvas{padding:12px;} }
+@media(max-width:850px) { .desk-shell{display:flex;flex-direction:column;padding:0 16px 24px;gap:16px;} .desk-header{order:0;} .desk-rounds{order:1;flex-direction:row;overflow-x:auto;border:0;padding:0;gap:8px;} .desk-rounds h2,.desk-rounds p{display:none;} .desk-rounds button{min-width:130px;min-height:44px;} .desk-question{order:2;padding:20px;} .desk-workspace{order:3;grid-template-columns:minmax(0,1fr);} .desk-controls{order:4;} .desk-shell>p{order:5;} .desk-footer{order:6;} .voices-panel{max-height:440px;} .cloud-canvas{height:470px;} }
+@media(max-width:480px) { .desk-header{gap:12px;} .desk-header button{padding-inline:12px;} .desk-question h1{font-size:26px;} .desk-controls{gap:12px;} .desk-controls>button{flex:1;min-height:44px;} .discussion-canvas{padding:10px;} .cloud-canvas{height:440px;} }
+
+.desk-question h1 {font-size:clamp(22px,2vw,30px);line-height:1.25;max-width:none;margin-top:6px;}
+.desk-question p:last-child {margin-top:8px;}
+.canvas-toolbar {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;}
+.canvas-actions {display:flex;flex-wrap:wrap;gap:8px;}
+.desk-workspace.voices-hidden {grid-template-columns:minmax(0,1fr);}
+.desk-shell.canvas-expanded {grid-template-columns:minmax(0,1fr);}
+.canvas-expanded .desk-rounds {display:none;}
+.canvas-expanded .desk-question,.canvas-expanded .desk-workspace,.canvas-expanded .desk-controls,.canvas-expanded .desk-footer,.canvas-expanded>p {grid-column:1;}
+.canvas-expanded .cloud-canvas {height:clamp(520px,76vh,1100px);}
+@media(max-width:850px) {
+ .desk-rounds button {flex-direction:row;min-height:44px;}
+ .canvas-toolbar {align-items:stretch;}
+ .canvas-actions {width:100%;}
+ .canvas-actions button {flex:1;}
+ .desk-question {padding:14px 16px;}
+ .cloud-canvas {height:clamp(460px,65svh,650px);}
+ .canvas-expanded .cloud-canvas {height:75svh;min-height:460px;}
 }
+
+/* Keep the canvas width stable when modal scroll locks hide the page scrollbar. */
+html { scrollbar-gutter: stable; }

@@ -38,7 +38,8 @@ afterEach(() => {
 });
 
 function facetMajority(facet: SampleFacet) {
-  const rows = SAMPLE_LINES.map((line, index) => ({ ...line, id: `s${index}` }));
+  // Keep the original English lexical-grouping benchmark separate from typography fixtures.
+  const rows = SAMPLE_LINES.filter(line=>!line.facet.startsWith("zh-")).map((line, index) => ({ ...line, id: `s${index}` }));
   const grouped = groupLocally(
     SAMPLE_PROMPT,
     rows.map((row) => ({ id: row.id, text: row.text })),
@@ -67,8 +68,8 @@ describe("local grouping of the sample discussion", () => {
     const feedback = facetMajority("feedback");
     const { grouped } = feedback;
     const ids = grouped.themes.flatMap((theme) => theme.responseIds);
-    expect(new Set(ids).size).toBe(SAMPLE_LINES.length);
-    expect(ids).toHaveLength(SAMPLE_LINES.length);
+    expect(new Set(ids).size).toBe(feedback.rows.length);
+    expect(ids).toHaveLength(feedback.rows.length);
     expect(grouped.themes.length).toBeGreaterThanOrEqual(4);
     expect(grouped.themes.length).toBeLessThanOrEqual(8);
     expect(grouped.concepts.length).toBeGreaterThanOrEqual(8);
@@ -99,7 +100,9 @@ describe("local grouping of the sample discussion", () => {
 
   it("is deterministic", () => {
     const items = SAMPLE_LINES.map((line, index) => ({ id: `s${index}`, text: line.text }));
-    expect(groupLocally(SAMPLE_PROMPT, items)).toEqual(groupLocally(SAMPLE_PROMPT, [...items].reverse()));
+    const result=groupLocally(SAMPLE_PROMPT, items);
+    expect(result).toEqual(groupLocally(SAMPLE_PROMPT, [...items].reverse()));
+    expect(result.themes.flatMap(theme=>theme.responseIds).sort()).toEqual(items.map(item=>item.id).sort());
   });
 });
 
@@ -132,6 +135,38 @@ describe("model output repair", () => {
 });
 
 describe("word cloud layout", () => {
+  it.each([[1200, 300], [360, 1600]])("keeps the constellation complete and collision-free at %i by %i", (width, height) => {
+    const words = Array.from({length: 28}, (_, i) => ({text: `Idea ${i}`, weight: 28-i, themeId: `theme-${i % 6}`}));
+    const measure = (text: string, font: number) => ({w: text.length * font * .52 + 44, h: font * 2.35});
+    const placed = layoutCloud(words, width, height, measure, true);
+    expect(placed).toHaveLength(words.length);
+    expect(layoutCloud([...words].reverse(), width, height, measure, true)).toEqual(placed);
+    for (const [i, a] of placed.entries()) {
+      expect(a.x >= 0 && a.y >= 0 && a.x + a.w <= width && a.y + a.h <= height).toBe(true);
+      expect(a.fontSize).toBeGreaterThanOrEqual(width < 480 ? 18 : 16);
+      for (const b of placed.slice(i + 1)) {
+        expect(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y).toBe(true);
+      }
+    }
+  });
+  it("spreads sparse concepts across the canvas and keeps mobile labels readable", () => {
+    const words = ["Sources", "Own voice", "Access", "Feedback", "Brainstorm", "Think first"].map((text, i) => ({text, weight: 6-i, themeId:null}));
+    const measure = (text: string, font: number) => ({w:text.length*font*.5+48,h:font*1.25+40});
+    const desktop = layoutCloud(words, 1000, 650, measure);
+    expect(desktop).toHaveLength(words.length);
+    expect(Math.max(...desktop.map(w=>w.x+w.w))-Math.min(...desktop.map(w=>w.x))).toBeGreaterThan(700);
+    const mobile = layoutCloud(words, 320, 1000, measure);
+    expect(mobile).toHaveLength(words.length);
+    expect(mobile.every(w=>w.fontSize>=18 && w.h>=44)).toBe(true);
+    expect(layoutCloud(words, 320, 1000, measure)).toEqual(mobile);
+  });
+  it("fits a dense desktop cloud without aligned rows", () => {
+    const words = Array.from({length:28}, (_,i)=>({text:`Idea ${i}`,weight:28-i,themeId:null}));
+    const placed = layoutCloud(words, 800, 380, (text,font)=>({w:text.length*font*.5+24,h:font*1.25+16}));
+    expect(placed).toHaveLength(28);
+    expect(new Set(placed.map(w=>Math.round(w.y))).size).toBeGreaterThan(20);
+    expect(placed.every(w=>w.y+w.h<=380 && w.fontSize>=16)).toBe(true);
+  });
   it("keeps words inside the frame without stacking them", () => {
     const words = [
       "Draft",

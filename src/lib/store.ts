@@ -1,3 +1,7 @@
+import { demoConcepts } from "@/lib/demo-concepts";
+import { countSupporters } from "@/lib/supporters";
+import { detailForConcept } from "@/lib/concept-detail";
+import { phraseConcepts } from "@/lib/concept-phrases";
 import { randomBytes, timingSafeEqual } from "crypto";
 import fs from "fs";
 import path from "path";
@@ -263,7 +267,7 @@ function insertDemo(db: DB, mode: "full" | "shell") {
   const round = latestRound(db, room);
   const items = db.responses
     .filter((response) => response.roundId === round.id && !response.hidden)
-    .map((response) => ({ id: response.id, text: response.text }));
+    .map((response) => ({ id: response.id, text: response.text, participantId: response.participantId }));
   db.analyses.push({
     ...groupLocally(round.prompt, items),
     id: rid("an"),
@@ -292,11 +296,16 @@ function visibleItems(db: DB, roundId: string) {
   return db.responses
     .filter((response) => response.roundId === roundId && !response.hidden)
     .sort((a, b) => a.createdAt - b.createdAt)
-    .map((response) => ({ id: response.id, text: response.text }));
+    .map((response) => ({ id: response.id, text: response.text, participantId: response.participantId }));
 }
 
-function conceptsFor(prompt: string, items: { id: string; text: string }[], analysis: Analysis | null) {
-  if (!analysis) return { concepts: liveConcepts(prompt, items), freshCount: 0 };
+function conceptsFor(prompt: string, items: { id: string; text: string; participantId: string }[], analysis: Analysis | null, demo = false) {
+  const counted = (concepts: Concept[]) => concepts.map(concept => {
+    const detail=detailForConcept(concept,items,analysis?.themes ?? []);
+    const supporterCount=detail.direct?countSupporters(detail.quotes):0;
+    return {...concept,supporterCount,weight:supporterCount};
+  });
+  if (!analysis) return { concepts: counted(liveConcepts(prompt, items)), freshCount: 0 };
   const covered = new Set(analysis.themes.flatMap((theme) => theme.responseIds));
   const fresh = items.filter((item) => !covered.has(item.id));
   const extra: Concept[] = liveConcepts(prompt, fresh).map((concept) => ({
@@ -304,7 +313,16 @@ function conceptsFor(prompt: string, items: { id: string; text: string }[], anal
     themeId: "fresh",
     weight: Math.min(4, concept.weight),
   }));
-  return { concepts: [...analysis.concepts, ...extra], freshCount: fresh.length };
+  // Refresh legacy local word labels without changing saved themes or responses.
+  let concepts = analysis.source === "local"
+    ? analysis.themes.flatMap(theme => phraseConcepts(items.filter(item => theme.responseIds.includes(item.id)), theme.id, 4))
+    : analysis.concepts;
+  if(demo && analysis.source === "local"){
+    const simulated=demoConcepts(items,analysis.themes);
+    const coveredIds=new Set(simulated.flatMap(c=>c.responseIds??[]));
+    concepts=[...simulated,...concepts.filter(c=>!c.responseIds?.some(id=>coveredIds.has(id)))];
+  }
+  return { concepts: counted([...concepts, ...extra]), freshCount: fresh.length };
 }
 
 function roundViews(db: DB, room: Room) {
@@ -313,7 +331,7 @@ function roundViews(db: DB, room: Room) {
     .sort((a, b) => a.index - b.index)
     .map((round) => {
       const analysis = db.analyses.find((item) => item.roundId === round.id) ?? null;
-      const cloud = conceptsFor(round.prompt, visibleItems(db, round.id), analysis);
+      const cloud = conceptsFor(round.prompt, visibleItems(db, round.id), analysis, room.isDemo);
       return {
         id: round.id,
         index: round.index,
@@ -507,7 +525,7 @@ export function studentView(code: string, token: string | null): StudentSnapshot
     : [];
   const analysis = db.analyses.find((item) => item.roundId === round.id) ?? null;
   const visible = visibleItems(db, round.id);
-  const cloud = conceptsFor(round.prompt, visible, analysis);
+  const cloud = conceptsFor(round.prompt, visible, analysis, room.isDemo);
   const show = room.showCloudToStudents && participant !== null;
   return {
     room: {

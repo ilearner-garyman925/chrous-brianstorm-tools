@@ -1,0 +1,70 @@
+.tensions-choice {align-items:flex-start;padding:15px 12px;gap:12px;}
+.tensions-choice>svg {flex-shrink:0;margin-top:3px;}
+.tensions-choice strong {display:block;font-size:17px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;}
+.tensions-choice small {display:inline-block;margin-top:8px;padding:2px 9px;border:1px solid var(--theme-border);border-radius:20px;font-size:12px;}
+.tensions-caution {margin:24px 12px 4px;font-size:14px;color:var(--theme-muted);}
+.tensions-detail>header h2 {font-size:26px;font-weight:650;line-height:1.2;margin:0 0 10px;overflow-wrap:anywhere;}
+.tensions-detail>header p {font-size:15px;line-height:1.5;margin:0;color:var(--theme-muted);max-width:80ch;}
+.tensions-note {margin:10px 0;padding:8px 12px;background:var(--theme-selected);border-radius:10px;font-size:14px;}
+.tensions-spectrum-scroll {overflow-x:auto;margin-top:20px;}
+.tensions-spectrum {min-width:500px;}
+.tensions-ends {display:flex;justify-content:space-between;gap:24px;font-size:17px;font-weight:600;}
+.tensions-ends>span {max-width:45%;overflow-wrap:anywhere;}
+.tensions-ends>span:last-child {text-align:right;}
+.tensions-plot {position:relative;margin-top:8px;}
+.tensions-axis {position:absolute;top:27px;left:3%;right:3%;height:1px;background:var(--theme-muted);}
+.tensions-axis::after {content:"";position:absolute;left:50%;top:-5px;height:11px;width:1px;background:var(--theme-muted);}
+.tensions-marker {position:absolute;width:30px;height:30px;display:grid;place-items:center;transform:translateX(-50%);border-radius:50%;cursor:pointer;}
+.tensions-marker>span {width:19px;height:19px;background:currentColor;border:2px solid var(--theme-surface);border-radius:50%;}
+.tensions-marker[aria-pressed=true] {background:var(--theme-selected);outline:2px solid var(--theme-text);outline-offset:1px;z-index:1;}
+.tensions-marker:hover>span {box-shadow:0 0 0 3px var(--theme-selected);}
+.tensions-legend {display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--theme-muted);padding-bottom:16px;border-bottom:1px solid var(--theme-border);}
+.tensions-legend>span {display:inline-flex;align-items:center;gap:6px;}
+.tensions-legend i {width:12px;height:12px;flex-shrink:0;border-radius:50%;}
+.tensions-evidence {padding-top:16px;}
+.tensions-evidence-heading {display:flex;align-items:center;flex-wrap:wrap;gap:12px;}
+.tensions-evidence blockquote {display:flex;align-items:flex-start;gap:14px;margin:12px 0 0;padding:14px 16px;border:1px solid var(--theme-border);border-radius:16px;}
+.tensions-evidence blockquote svg {flex-shrink:0;margin-top:4px;}
+.tensions-evidence blockquote p {margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:calc(19px * var(--reading-scale,1));line-height:1.45;}
+.tensions-help {margin:10px 0;color:var(--theme-muted);font-size:14px;}
+.tensions-related-toggle {display:flex;align-items:center;gap:9px;border:1px solid var(--theme-border);border-radius:22px;padding:8px 14px;font-size:14px;cursor:pointer;}
+.tensions-related {list-style:none;margin:14px 0 0;padding:0;}
+.tensions-related li+li {border-top:1px solid var(--theme-border);}
+.tensions-related button {text-align:left;width:100%;padding:10px;border-radius:10px;cursor:pointer;white-space:pre-wrap;overflow-wrap:anywhere;font-size:calc(16px * var(--reading-scale,1));}
+.tensions-related button[aria-pressed=true],.tensions-related button:hover {background:var(--theme-selected);}
+.tensions-empty {font-size:20px;line-height:1.5;max-width:65ch;}
+@media(max-width:700px){.tensions-choice{width:240px;}.tensions-caution{margin:10px 0 0;}.tensions-detail>header h2{font-size:23px;}.tensions-evidence blockquote p{font-size:calc(17px * var(--reading-scale,1));}}
+
+/* Dense distributions scroll inside the plot so evidence stays close to it. */
+.tensions-spectrum-scroll {max-height:132px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--theme-border) transparent;}
+.tensions-ends {position:sticky;top:0;z-index:2;background:var(--theme-surface);padding-bottom:5px;}
+.tensions-legend {padding-top:8px;padding-bottom:10px;}
+.tensions-evidence {padding-top:10px;}
+
+.tensions-plot-help {margin:4px 0;font-size:12px;color:var(--theme-muted);}
+
+.tensions-detail {padding:14px 20px;}
+.tensions-detail>header h2 {font-size:23px;margin-bottom:6px;}
+.tensions-detail>header p {font-size:14px;line-height:1.35;}
+.tensions-spectrum-scroll {margin-top:10px;max-height:86px;}
+.tensions-legend {gap:5px 12px;padding-top:4px;padding-bottom:8px;font-size:12px;}
+.tensions-evidence blockquote {margin-top:8px;padding:10px 12px;}
+.tensions-evidence blockquote p {font-size:calc(17px * var(--reading-scale,1));line-height:1.35;}
+
+
+/* Reserve space between plot content and native/overlay scrollbars. */
+.tensions-spectrum-scroll {scrollbar-gutter:stable;}
+.tensions-spectrum {margin-inline:6px 20px;padding-block:4px 8px;}
+
+
+/* Explicit groups replace the short vertical scroll area. */
+.tensions-spectrum-scroll {max-height:none;overflow-y:hidden;scrollbar-gutter:auto;}
+.tensions-spectrum {padding-block:4px 0;}
+.tensions-ends {position:static;}
+.tensions-axis {top:23px;}
+.tensions-pagination {display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin:0 0 8px;}
+.tensions-pagination button {min-height:36px;padding:6px 14px;border:1px solid var(--theme-border);border-radius:18px;cursor:pointer;font-size:14px;}
+.tensions-pagination button:hover:not(:disabled) {background:var(--theme-selected);}
+.tensions-pagination button:disabled {opacity:.4;cursor:default;}
+.tensions-pagination span {font-size:13px;color:var(--theme-muted);}
+
